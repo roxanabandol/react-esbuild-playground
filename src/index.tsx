@@ -9,8 +9,8 @@ const root = ReactDOM.createRoot(el);
 
 const App = () => {
   const ref = useRef<typeof esbuild | null>(null);
+  const iframe =  useRef<any>();
   const [input, setInput] = useState('');
-  const [code, setCode] = useState('');
 
   // Initialize esbuild
   useEffect(() => {
@@ -29,9 +29,10 @@ const App = () => {
   const onClick = async () => {
     if (!ref.current) return;
 
+    iframe.current.srcdoc = html;
+
     // Bundle the code
     const result = await ref.current.build({
-      // entryPoints: ['index.js'],
       bundle: true,
       write: false,
       plugins: [
@@ -51,20 +52,28 @@ const App = () => {
     });
 
     // Display bundled code
-    setCode(result.outputFiles[0].text);
-    try {
-      eval(result.outputFiles[0].text)
-    }catch (err) {
-      console.error(err);
-    } 
-
-    // Run the bundled code in an iframe sandbox
-    const iframe = document.createElement('iframe');
-    iframe.style.width = '100%';
-    iframe.style.height = '200px';
-    document.body.appendChild(iframe);
-    (iframe.contentWindow as any).eval(result.outputFiles[0].text);
+    iframe.current.contentWindow.postMessage(result.outputFiles[0].text, '*');
   };
+
+  const html= `
+    <html>
+      <head></head>
+      <body>
+        <div id="root"></div>
+        <script>
+        window.addEventListener('message', (event) => {
+          try {
+            eval(event.data);
+          } catch (err) {
+            const root = document.getElementById('root');
+            root.innerHTML = '<div style="color: red;"><h4>Runtime Error</h4>' + err + '</div>';
+            console.error(err);
+          }
+        }, false);
+        </script>
+      </body>
+    </html> 
+  `
 
   return (
     <div style={{ padding: 20 }}>
@@ -79,15 +88,9 @@ const App = () => {
         <button onClick={onClick}>Submit</button>
       </div>
       <h3>Bundled Output:</h3>
-      <pre style={{ marginTop: 10, background: '#f0f0f0', padding: 10 }}>
-        {code}
-      </pre>
-      <iframe sandbox='' srcDoc={html}></iframe>
+      <iframe ref={iframe} sandbox='allow-scripts' srcDoc={html} title="Code execution preview"></iframe>
     </div>
   );
 };
-
-const html = `
-<h1>Local HTML doc</h1>`  
 
 root.render(<App />);
