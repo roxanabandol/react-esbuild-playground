@@ -55,7 +55,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ defaultValue, onChange }) => {
         defaultValue={defaultValue || '// Write your code here'}
         theme="vs-dark"
         language="javascript"
-        height="500px"
+        height="100%"
         options={{
           wordWrap: 'on',
           minimap: { enabled: false },

@@ -1,3 +1,4 @@
+import './preview.css';
 import { useEffect, useRef } from 'react';
 
 interface PreviewProps {
@@ -10,7 +11,9 @@ const Preview: React.FC<PreviewProps> = ({ code }) => {
   // HTML-ul iframe-ului
   const html = `
     <html>
-      <head></head>
+      <head>
+      <style>html {background-color: white;}</style>
+      </head>
       <body>
         <div id="root" style="font-family: monospace;"></div>
         <script>
@@ -61,7 +64,7 @@ const Preview: React.FC<PreviewProps> = ({ code }) => {
         console.log(...event.data.data);
       }
       if (event.data?.type === 'error') {
-        console.error(...event.data.data);
+        console.log(...event.data.data);
       }
     };
 
@@ -83,18 +86,14 @@ const Preview: React.FC<PreviewProps> = ({ code }) => {
   }, [code]);
 
   return (
-    <iframe
-      ref={iframeRef}
-      sandbox="allow-scripts"
-      srcDoc={html}
-      title="Code execution preview"
-      style={{
-        width: '100%',
-        height: '300px',
-        border: '1px solid #ccc',
-        fontFamily: 'monospace',
-      }}
-    />
+    <div className="preview-wrapper">
+      <iframe
+        ref={iframeRef}
+        sandbox="allow-scripts"
+        srcDoc={html}
+        title="Code execution preview"
+      />
+    </div>
   );
 };
 
