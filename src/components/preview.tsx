@@ -1,56 +1,35 @@
 import './preview.css';
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface PreviewProps {
   code: string;
+  err: string;
 }
 
-const Preview: React.FC<PreviewProps> = ({ code }) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // HTML-ul iframe-ului
-  const html = `
+const html = `
     <html>
       <head>
-      <style>html {background-color: white;}</style>
+        <style>html { background-color: white; }</style>
       </head>
       <body>
-        <div id="root" style="font-family: monospace;"></div>
+        <div id="root"></div>
         <script>
-          const root = document.getElementById('root');
-
-          // Salvăm referințele originale
-          const originalLog = console.log;
-          const originalError = console.error;
-
-          // Funcție pentru a scrie în div
-          const appendToRoot = (type, args) => {
-            const el = document.createElement('div');
-            el.style.color = type === 'error' ? 'red' : 'black';
-            el.textContent = args.join(' ');
-            root.appendChild(el);
+          const handleError = (err) => {
+            const root = document.querySelector('#root');
+            root.innerHTML = '<div style="color: red;"><h4>Runtime Error</h4>' + err + '</div>';
+            console.error(err);
           };
 
-          // Redirecționăm console.log și console.error
-          console.log = (...args) => {
-            originalLog(...args);             // în DevTools
-            appendToRoot('log', args);       // în iframe
-            parent.postMessage({ type: 'log', data: args }, '*'); // către parent
-          };
+          window.addEventListener('error', (event) => {
+            event.preventDefault();
+            handleError(event.error);
+          });
 
-          console.error = (...args) => {
-            originalError(...args);
-            appendToRoot('error', args);
-            parent.postMessage({ type: 'error', data: args }, '*');
-          };
-
-          // Ascultăm codul venit prin postMessage
           window.addEventListener('message', (event) => {
-            root.innerHTML = ''; // curățăm outputul anterior
             try {
               eval(event.data);
             } catch (err) {
-              console.error(err);
+              handleError(err);
             }
           }, false);
         </script>
@@ -58,41 +37,25 @@ const Preview: React.FC<PreviewProps> = ({ code }) => {
     </html>
   `;
 
+const Preview: React.FC<PreviewProps> = ({ code, err }) => {
+  const iframe = useRef<any>();
+
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'log') {
-        console.log(...event.data.data);
-      }
-      if (event.data?.type === 'error') {
-        console.log(...event.data.data);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    const iframe = iframeRef.current;
-    if (iframe) {
-      iframe.srcdoc = html;
-
-      iframe.onload = () => {
-        iframe.contentWindow?.postMessage(code, '*');
-      };
-    }
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    iframe.current.srcdoc = html;
+    setTimeout(() => {
+      iframe.current.contentWindow.postMessage(code, '*');
+    }, 50);
   }, [code]);
 
   return (
     <div className="preview-wrapper">
       <iframe
-        ref={iframeRef}
+        ref={iframe}
         sandbox="allow-scripts"
         srcDoc={html}
         title="Code execution preview"
       />
+      {err && <div className="preview-error">{err}</div>}
     </div>
   );
 };

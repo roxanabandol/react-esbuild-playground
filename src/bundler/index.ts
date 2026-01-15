@@ -13,23 +13,34 @@ const bundle = async (rawCode: string) => {
   }
   await service;
 
-  const result = await esbuild.build({
-    stdin: {
-      contents: rawCode,
-      loader: 'tsx',
-      resolveDir: '/',
-      sourcefile: 'index.tsx',
-    },
-    bundle: true,
-    write: false,
-    plugins: [unpkgPathPlugin(), fetchPlugin(rawCode)],
-    define: {
-      'process.env.NODE_ENV': '"production"',
-      global: 'window',
-    },
-  });
+  try {
+    const result = await esbuild.build({
+      stdin: {
+        contents: rawCode,
+        loader: 'tsx',
+        resolveDir: '/',
+        sourcefile: 'index.tsx',
+      },
+      bundle: true,
+      write: false,
+      plugins: [unpkgPathPlugin(), fetchPlugin(rawCode)],
+      define: {
+        'process.env.NODE_ENV': '"production"',
+        global: 'window',
+      },
+    });
 
-  return result.outputFiles[0].text;
+    return { code: result.outputFiles[0].text, err: '' };
+  } catch (err) {
+    if (err instanceof Error) {
+      return {
+        code: '',
+        err: err.message,
+      };
+    } else {
+      throw err;
+    }
+  }
 };
 
 export default bundle;
