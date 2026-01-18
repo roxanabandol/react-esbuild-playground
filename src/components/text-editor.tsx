@@ -23,7 +23,6 @@ const TextEditor: React.FC<TextEditorProps> = ({ cell }) => {
         return;
       }
 
-      console.log(event.target);
       setEditing(false);
     };
     document.addEventListener('click', listener, { capture: true });
@@ -33,22 +32,22 @@ const TextEditor: React.FC<TextEditorProps> = ({ cell }) => {
     };
   }, []);
 
+  if (editing) {
+    return (
+      <div className="text-editor" ref={ref}>
+        <MDEditor
+          value={cell.content}
+          onChange={(v) => updateCell(cell.id, v || '')}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {editing ? (
-        <div className="text-editor" ref={ref}>
-          <MDEditor
-            value={cell.content}
-            onChange={(v) => updateCell(cell.id, v || '')}
-          />
-        </div>
-      ) : (
-        <div className="text-editor card" onClick={() => setEditing(true)}>
-          <div className="card-content">
-            <MDEditor.Markdown source={cell.content || 'Click to edit'} />
-          </div>
-        </div>
-      )}
+    <div className="text-editor card" onClick={() => setEditing(true)}>
+      <div className="card-content">
+        <MDEditor.Markdown source={cell.content || 'Click to edit'} />
+      </div>
     </div>
   );
 };
