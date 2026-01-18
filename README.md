@@ -32,6 +32,13 @@ Users can write and execute **JavaScript / TypeScript / TSX** code directly in t
 - Integrated **Monaco Editor** for a modern code editing experience
 - Added **Prettier** formatting button for editor content
 - Tab size configured to **2 spaces** for better code style consistency
+  **React 18 Compatible:** `show` uses `ReactDOM.createRoot`, avoiding warnings from the old API.
+- **Centralized `show` function:** renders JSX, objects, or primitive values in the preview.
+- **Import prevention:** any `import` statements in user code are blocked and replaced with a warning.
+- **Global libraries available:** React, ReactDOM, and other libraries (e.g., axios) can be used directly in user code.
+- **JSX transpiled with Babel:** user JSX runs in the iframe without extra imports.
+- **Preview error handling:** runtime errors are caught and displayed clearly, without breaking the main app.
+- **Debounced bundle updates:** smoother and more performant code updates.
 
 ---
 
